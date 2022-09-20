@@ -76,3 +76,62 @@ func Test_lookup(t *testing.T) {
 		})
 	}
 }
+func Test_DeepSearchInMap(t *testing.T) {
+	type args struct {
+		sourceMap map[string]interface{}
+		paths     []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]interface{}
+	}{
+		{
+			name: "ok",
+			args: args{
+				paths: []string{"stag"}, // Flattened multilevel map deep search，
+				sourceMap: map[string]interface{}{
+					"stag": map[string]interface{}{
+						"host": "https://stag.qa.com",
+						"port": 3306,
+					},
+				},
+			},
+			want: map[string]interface{}{
+				"host": "https://stag.qa.com",
+				"port": 3306,
+			},
+		},
+		{
+			name: "failed to get data",
+			args: args{
+				paths: []string{"dev"}, // Flattened multilevel map deep search，
+				sourceMap: map[string]interface{}{
+					"stag": map[string]interface{}{
+						"host": "https://stag.qa.com",
+						"port": 3306,
+					},
+				},
+			},
+			want: map[string]interface{}{},
+		},
+		{
+			name: "go too deeper to  get data",
+			args: args{
+				paths: []string{"stag", "host"}, // Flattened multilevel map deep search，
+				sourceMap: map[string]interface{}{
+					"stag": map[string]interface{}{
+						"host": "https://stag.qa.com",
+						"port": 3306,
+					},
+				},
+			},
+			want: map[string]interface{}{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, DeepSearchInMap(tt.args.sourceMap, tt.args.paths...), "DeepSearchInMap(%v, %v)", tt.args.sourceMap, tt.args)
+		})
+	}
+}

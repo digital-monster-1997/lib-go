@@ -22,3 +22,35 @@ func lookup(prefix, sep string, sourceData, destData map[string]interface{}) {
 		}
 	}
 }
+
+// DeepSearchInMap ...
+func DeepSearchInMap(sourceMap map[string]interface{}, paths ...string) map[string]interface{} {
+	// Deep Copy => Does not affect the original data
+	newMap := make(map[string]interface{})
+	for key, value := range sourceMap {
+		newMap[key] = value
+	}
+	return deepSearch(newMap, paths)
+}
+
+// deepSearch Get data when the structure diagram is not flattened.
+func deepSearch(m map[string]interface{}, path []string) map[string]interface{} {
+	var newMap = make(map[string]interface{})
+	for _, searchKey := range path {
+		subMap, ok := m[searchKey]
+		// field to find value of searchKey
+		if !ok {
+			newMap = make(map[string]interface{})
+			m[searchKey] = newMap
+			m = newMap
+			continue
+		}
+		newMap, ok = subMap.(map[string]interface{})
+		if !ok {
+			newMap = make(map[string]interface{})
+			m[searchKey] = newMap
+		}
+		m = newMap
+	}
+	return m
+}
