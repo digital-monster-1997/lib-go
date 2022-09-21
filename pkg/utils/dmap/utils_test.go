@@ -235,7 +235,7 @@ func TestMergeStringMap(t *testing.T) {
 			},
 		},
 		{
-			name: "一維測試",
+			name: "ok",
 			args: args{
 				dest: map[string]interface{}{
 					"1w":  "tt",
