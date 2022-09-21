@@ -1,7 +1,9 @@
 package dmap
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
 
@@ -132,6 +134,132 @@ func Test_DeepSearchInMap(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, DeepSearchInMap(tt.args.sourceMap, tt.args.paths...), "DeepSearchInMap(%v, %v)", tt.args.sourceMap, tt.args)
+		})
+	}
+}
+
+func TestToMapStringInterface(t *testing.T) {
+	type args struct {
+		src map[interface{}]interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]interface{}
+	}{
+		{
+			name: "convert int to string",
+			args: args{src: map[interface{}]interface{}{
+				1: "value",
+			}},
+			want: map[string]interface{}{
+				"1": "value",
+			},
+		},
+		{
+			name: "convert bool to string",
+			args: args{src: map[interface{}]interface{}{
+				true: "value",
+			}},
+			want: map[string]interface{}{
+				"true": "value",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, ToMapStringInterface(tt.args.src), "ToMapStringInterface(%v)", tt.args.src)
+		})
+	}
+}
+
+func TestMergeStringMap(t *testing.T) {
+	type args struct {
+		dest map[string]interface{}
+		src  map[string]interface{}
+		tar  map[string]interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "二維測試",
+			args: args{
+				dest: map[string]interface{}{
+					"2w": map[string]interface{}{
+						"test":  "2wtd",
+						"test1": "2wtd1",
+					},
+					"2wa": map[string]interface{}{
+						"test":  "2wtd",
+						"test1": "2wtd1",
+					},
+					"2wi": map[interface{}]interface{}{
+						"test":  "2wtd",
+						"test1": "2wtd1",
+					},
+				},
+				src: map[string]interface{}{
+					"2w": map[string]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+					"2wb": map[string]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+					"2wi": map[interface{}]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+				},
+				tar: map[string]interface{}{
+					"2w": map[string]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+					"2wb": map[string]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+					"2wa": map[string]interface{}{
+						"test":  "2wtd",
+						"test1": "2wtd1",
+					},
+					"2wi": map[string]interface{}{
+						"test":  "2wtds",
+						"test1": "2wtd1s",
+					},
+				},
+			},
+		},
+		{
+			name: "一維測試",
+			args: args{
+				dest: map[string]interface{}{
+					"1w":  "tt",
+					"1wa": "mq",
+				},
+				src: map[string]interface{}{
+					"1w":  "tts",
+					"1wb": "bq",
+				},
+				tar: map[string]interface{}{
+					"1w":  "tts",
+					"1wa": "mq",
+					"1wb": "bq",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MergeStringMap(tt.args.dest, tt.args.src)
+			if !reflect.DeepEqual(tt.args.dest, tt.args.tar) {
+				spew.Dump(tt.args.dest)
+				t.FailNow()
+			}
 		})
 	}
 }

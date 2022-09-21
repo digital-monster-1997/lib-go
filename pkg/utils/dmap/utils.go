@@ -2,7 +2,8 @@ package dmap
 
 import (
 	"fmt"
-	"github.com/DigitakMonster1997/lib-go/pkg/utils/dcast"
+	"github.com/spf13/cast"
+	"reflect"
 )
 
 // lookup Flattened multilevel map, add prefix + sep if there is one
@@ -13,7 +14,7 @@ func lookup(prefix, sep string, sourceData, destData map[string]interface{}) {
 		if prefix == "" {
 			fullIndex = fmt.Sprintf("%s", key)
 		}
-		if dd, err := dcast.ToStringMapE(value); err != nil {
+		if dd, err := cast.ToStringMapE(value); err != nil {
 			//  The last level, can not be split
 			destData[fullIndex] = value
 		} else {
@@ -53,4 +54,42 @@ func deepSearch(m map[string]interface{}, path []string) map[string]interface{} 
 		m = newMap
 	}
 	return m
+}
+
+// ToMapStringInterface convert map[interface{}]interface{} to map[string]interface{}
+func ToMapStringInterface(src map[interface{}]interface{}) map[string]interface{} {
+	dest := make(map[string]interface{})
+	for key, value := range src {
+		dest[fmt.Sprintf("%v", key)] = value
+	}
+	return dest
+}
+
+// MergeStringMap merge two map[string]interface to one Rule is 1. If dest has no value but src has => put src key value in desc 2. If src and dest both have key but value is different type => keep dest one 3. If src and dest both have key and is same type => using src one
+func MergeStringMap(dest, src map[string]interface{}) {
+	for sk, sv := range src {
+		tv, ok := dest[sk]
+		if !ok {
+			dest[sk] = sv
+			continue
+		}
+		svType := reflect.TypeOf(sv)
+		tvType := reflect.TypeOf(tv)
+		if svType != tvType {
+			continue
+		}
+		switch ttv := tv.(type) {
+		case map[interface{}]interface{}:
+			tsv := sv.(map[interface{}]interface{})
+			ssv := ToMapStringInterface(tsv)
+			stv := ToMapStringInterface(ttv)
+			MergeStringMap(stv, ssv)
+			dest[sk] = stv
+		case map[string]interface{}:
+			MergeStringMap(ttv, sv.(map[string]interface{}))
+			dest[sk] = ttv
+		default:
+			dest[sk] = sv
+		}
+	}
 }
